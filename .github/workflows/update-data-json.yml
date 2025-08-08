@@ -2,15 +2,18 @@ on:
   workflow_dispatch:
   schedule:
     # Run once per day
-    - cron: "0 13 * * *"
+    - cron: "30 3,12 * * *"
 
 name: Check for metadata changes
 
 jobs:
-  check:
+  check_data:
     runs-on: ubuntu-latest
+    outputs:
+      COMMIT_CHANGES: ${{ steps.passvars.outputs.COMMIT_CHANGES}}
+      POST_BSKY: ${{ steps.passvars.outputs.POST_BSKY}}
+      POST_TEXT: ${{ steps.passvars.outputs.POST_TEXT}}
     steps:
-
       - uses: actions/checkout@v4
     
       # Install R and dependencies
@@ -22,18 +25,22 @@ jobs:
 
       # Run R script to grab metadata and compare against saved .csv
       - name: Run update-metadata.R
-        run: Rscript scripts/update-metadata.R
+        run: |
+          Rscript scripts/update-metadata.R
 
-      # Commit or not based on env variable passed from R
-      - name: Print $UPDATED_DATA
-        run: echo "endpoints.csv changed:" $UPDATED_DATA
+      - name: Pass vars to output for use in following jobs
+        id: passvars
+        run: |
+          echo "endpoints.csv changed: ${{env.UPDATED_DATA}}"
+          echo "Should changes be committed: ${{env.COMMIT_CHANGES}}"
+          echo "Should it post on bsky: ${{env.POST_BSKY}}"
+          echo "COMMIT_CHANGES=${{env.COMMIT_CHANGES}}" >> $GITHUB_OUTPUT
+          echo "POST_BSKY=${{env.POST_BSKY}}" >> $GITHUB_OUTPUT
+          echo "POST_TEXT=${{env.POST_TEXT}}" >> $GITHUB_OUTPUT
 
-      - name: If the cached CSV has not changed, finish
-        if: env.UPDATED_DATA == 'false'
-        run: echo "no changes, nothing committed"
-
-      - name: Set up commit
-        if: env.UPDATED_DATA == 'true'
+      # Commit using message text prepared in R
+      - name: Commit changes
+        if: ${{ env.COMMIT_CHANGES == 'true' }} 
         run: |
           # Configure git user
           git config user.name "hrecht[bot]"
@@ -42,16 +49,57 @@ jobs:
           # Commit files
           git add .
 
-      - name: Push minor changes update
-        if: env.UPDATED_DATA == 'true' && env.MAJOR_CHANGES == 'false'
-        run: |
-          timestamp=$(TZ=:America/New_York date '+%Y-%m-%d %H:%M')
-          git commit -m "Minor data change ${timestamp}" || exit 0
+          git commit -m "${{env.COMMIT_MESSAGE}}" || exit 0
           git push
 
-      - name: Push major changes update
-        if: env.UPDATED_DATA == 'true' && env.MAJOR_CHANGES == 'true'
+      # Pause a little before deploying to github pages
+      # Otherwise it's happening too quickly to work
+      - name: Build pause
+        if: ${{ env.COMMIT_CHANGES == 'true' }} 
         run: |
-          timestamp=$(TZ=:America/New_York date '+%Y-%m-%d %H:%M')
-          git commit -m "Major data change ${timestamp}" || exit 0
-          git push
+          sleep 45
+          echo "Pause before building site"
+
+  # Build the page only if changes were committed
+  build_site:
+   needs: check_data
+   if: ${{ needs.check_data.outputs.COMMIT_CHANGES == 'true' }} 
+   uses: ./.github/workflows/deploy-site.yml
+   secrets: inherit
+
+  # Post to Bluesky based on R output
+  post_bluesky:
+    runs-on: ubuntu-latest
+    needs: check_data
+    if: ${{ needs.check_data.outputs.POST_BSKY == 'true' }} 
+    steps:
+        - name: Echo vars
+          run: |
+            echo "Should it post: ${{ needs.check_data.outputs.POST_BSKY }}"
+            echo "Post text: ${{ needs.check_data.outputs.POST_TEXT }}"
+
+        - name: Set up end of post text
+          run: |
+            echo
+            POST_END=$(cat << EOF
+              
+            See more: https://www.hrecht.com/census-api-datasets/
+            EOF
+            )
+            echo "POST_END<<EOF" >> $GITHUB_ENV
+            echo "$POST_END" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+
+        # Pause a little before posting to give time for page to build
+        - name: Bluesky pause
+          run: |
+            sleep 60
+            echo "Pause before posting to Bluesky"
+  
+        - name: Send post
+          uses: myConsciousness/bluesky-post@v5
+          with:
+              text: ${{ needs.check_data.outputs.POST_TEXT }}${{ env.POST_END }}
+              identifier: ${{ secrets.BLUESKY_IDENTIFIER }}
+              password: ${{ secrets.BLUESKY_PASSWORD }}
+

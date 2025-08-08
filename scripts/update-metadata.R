@@ -6,8 +6,17 @@
 
 library(censusapi)
 
+source("scripts/update-settings.R")
+
+# Should this be committed or not?
+if (commit_changes == F) {
+	system('echo "COMMIT_CHANGES=false" >> "$GITHUB_ENV"')
+} else {
+	system('echo "COMMIT_CHANGES=true" >> "$GITHUB_ENV"')
+}
+
 # Read in old metadata
-endpoints_old <- read.csv("data/endpoints.csv")
+endpoints_old <- read.csv("src/routes/_data/endpoints.csv")
 endpoints_old[endpoints_old == ""] <- NA 
 
 # Get metadata
@@ -17,43 +26,64 @@ endpoints_new <- listCensusApis()
 endpoints_new <- endpoints_new[order(endpoints_new$vintage, endpoints_new$name, decreasing = T),]
 row.names(endpoints_new) <- NULL
 
+# Time of data checking for commit message and data saving
+current_time <- as.POSIXct(Sys.time(),
+													 tz = "America/New_York")
+string_time <- format(current_time, "%Y-%m-%d %H:%M")
+
 ################################################################
 # Tests for these functions when the data has not ACTUALLY changed
+# Variable test_changes imported from test-data-changes.R
 ################################################################
-test_changes <- F
-
 if (test_changes == T) {
+	system('echo "DATA_TEST=true" >> "$GITHUB_ENV"')
+	test_message <- "TEST"
+	
+	# How many rows to add or remove
+	add_num <- sample(1:5, 1)
+	rm_num <- sample(1:5, 1)
+	
 	# Change a less-important metadata field
-	endpoints_new[1,1] <- "test"
+	endpoints_new[1,1] <- "test minor"
 	
-	# Fake new row
-	fake_row <- endpoints_old[100,]
-	fake_row$name <- "test/test"
-	fake_row$title <- "My fake dataset"
-	fake_row$description <- "This is a fake test."
-	fake_row$url <- "http://api.census.gov/data/2022/test/test"
-	endpoints_new <- rbind(fake_row, endpoints_new)
+	# Fake remove rows
+	rm_rows <- sample(1:nrow(endpoints_new), rm_num, replace=FALSE)
+	for (f in seq_along(rm_rows)) {
+		endpoints_new <- endpoints_new[-rm_rows[f],]
+	}
 	
-	# Fake remove row
-	endpoints_new <- endpoints_new[-27,]
-	endpoints_new <- endpoints_new[-300,]
+	# Fake new rows
+	add_rows <- sample(1:nrow(endpoints_new), add_num, replace=FALSE)
+	for (f in (1:add_num)) {
+		fake_row <- endpoints_old[add_rows[f],]
+		fake_row$name <- paste0(fake_row$name, "/test")
+		fake_row$title <- paste("TEST", fake_row$title)
+		fake_row$description <- "This is a fake test."
+		fake_row$url <- paste0(fake_row$url, "/fake")
+		endpoints_new <- rbind(fake_row, endpoints_new)
+	}
+} else {
+	system('echo "DATA_TEST=false" >> "$GITHUB_ENV"')	
+	test_message <- ""
 }
 
-# Is there any difference?
+################################################################
+# Is there any difference between old and new data?
+################################################################
 is_identical <- identical(endpoints_old, endpoints_new)
 print("Are the old and new endpoints metadata identical?")
 print(is_identical)
 
 if (is_identical) {
-	print("Nothing to change")
+	data_change <- "None"
+	
+	print("No data changes")
 	system('echo "UPDATED_DATA=false" >> "$GITHUB_ENV"')
-	system('echo "MAJOR_CHANGES=false" >> "$GITHUB_ENV"')
+	commit_message <- "No data changes"
+	urls_added <- NULL
+	urls_removed <- NULL
 	
 } else {
-	current_time <- as.POSIXct(Sys.time(),
-														 tz = "America/New_York")
-	string_time <- format(current_time, "%Y-%m-%d %H:%M")
-	
 	# If there is a difference, see if there are added and/or removed endpoints
 	
 	# If the endpoint row changed in some other way like updated
@@ -67,6 +97,7 @@ if (is_identical) {
 	urls_removed <- setdiff(urls_old, urls_new)
 	
 	if (length(urls_added) > 0 | (length(urls_removed) > 0)) {
+		data_change <- "Major"
 		# Extract the full removed or added rows
 		
 		if (length(urls_added) > 0) {
@@ -97,27 +128,117 @@ if (is_identical) {
 																	names(rows_noted)[names(rows_noted) != "change_date"])]
 		
 		# Append existing file of endpoint additions/deletions
-		write.table(rows_noted, file = "data/endpoint-changes.csv",
-								sep = ",", append = T, quote = T,
-								col.names = F, row.names = F)
+		endpoint_changes <- read.csv("src/routes/_data/endpoint-changes.csv")
+		endpoint_changes <- rbind(endpoint_changes, rows_noted)
+		# write.csv(endpoint_changes, "src/routes/_data/endpoint-changes.csv", na = "", row.names = F)
 		
-		# Save status out to env
-		system('echo "MAJOR_CHANGES=true" >> "$GITHUB_ENV"')
+		commit_message <- "Major data update"
+		
 	} else {
-		system('echo "MAJOR_CHANGES=false" >> "$GITHUB_ENV"')
+		data_change <- "Minor"
+		commit_message <- "Minor data update"
 	}
 	
 	# Update the minimal csv
 	print("Updating data/endpoints.csv'")
-	write.csv(endpoints_new, "data/endpoints.csv", row.names = F, na = "")
+	# write.csv(endpoints_new, "src/routes/_data/endpoints.csv", row.names = F, na = "")
 	
 	# Download full metadata
 	print("Updating full data/data.json")
-	download.file("https://api.census.gov/data.json", destfile = "data/data.json")
-	
-	# Update timestamp in update-time.txt
-	writeLines(string_time, "update-time.txt")
+	# download.file("https://api.census.gov/data.json", destfile = "data/data.json")
 	
 	# Save out the update status to Github actions env
 	system('echo "UPDATED_DATA=true" >> "$GITHUB_ENV"')
+}
+
+################################################################
+# Save out results to logs and prep for commit
+################################################################
+
+# Update timestamp for page
+update_json <- paste0('{"updated": "', current_time, '"}')
+writeLines(update_json, "src/routes/_data/update-time.json")
+
+# Prepare commit message, run through Github actions
+commit_text <- paste(string_time, test_message, commit_message)
+commit_line <- paste0("COMMIT_MESSAGE='", commit_text, "'", ' >> "$GITHUB_ENV"')
+system(paste('echo ', commit_line))
+print(commit_line)
+
+# Save log of update results
+update_results <- read.csv("data/update-log.csv")
+update_new <- data.frame(
+	date = string_time,
+	test_data = test_changes,
+	test_revert = test_revert,
+	change = commit_message,
+	endpoints_added = length(urls_added),
+	urls_added = toString(urls_added),
+	endpoints_removed = length(urls_removed),
+	urls_removed = toString(urls_removed)
+)
+
+update_results <- rbind(update_new, update_results)
+write.csv(update_results, "data/update-log.csv", row.names = F, na = "")
+
+################################################################
+# Social media post
+# Only post if it's a major data update (additions or removals)
+# If it's just one addition or removal, list the URL added/removed
+# Otherwise just how many
+################################################################
+
+if (data_change == "Major") {
+	system('echo "POST_BSKY=true" >> "$GITHUB_ENV"')
+	
+	if (test_changes == T) {
+		post_start <- paste(test_message, "The Census APIs")
+	} else {
+		post_start <- "The Census APIs"
+	}
+	
+	if (length(urls_added) == 1) {
+		added_text <- "added 1 dataset"
+	} else if (length(urls_added) > 1){
+		added_text <- paste("added", length(urls_added), "datasets")
+	}
+	
+	if (length(urls_removed) == 1) {
+		removed_text <- "removed 1 dataset"
+	} else if (length(urls_removed) > 1){
+		removed_text <- paste("removed", length(urls_removed), "datasets")
+	}
+	
+	# Just one addition
+	if (length(urls_added) == 1 & length(urls_removed) == 0) {
+		post_content <- paste(post_start, "added 1 dataset:", gsub("http://api.census.gov/data/", "", urls_added))
+		
+		# More than one addition
+	} else if (length(urls_added) > 1 & length(urls_removed) == 0) {
+		post_content <- paste(post_start, added_text)
+		
+		# Just one removal
+	}	else if (length(urls_added) == 0 & length(urls_removed) == 1) {
+		post_content <- paste(post_start, "removed 1 dataset:", gsub("http://api.census.gov/data/", "", urls_removed))
+		
+		# More than one removal
+	} else if (length(urls_added) == 0 & length(urls_removed) > 1) {
+		post_content <- paste(post_start, removed_text)
+		
+		# Both addition(s) and removal(s)
+	} else if (length(urls_added) > 0 & length(urls_removed) > 0){
+		post_content <- paste(post_start, added_text, "and", removed_text)
+		
+		# Some weird behavior that shouldn't happen
+	} else {
+		system('echo "POST_BSKY=false" >> "$GITHUB_ENV"')
+		post_content <- " "
+	} 
+	
+	post_part <- paste0("POST_TEXT='", post_content, "'", ' >> "$GITHUB_ENV"')
+	system(paste('echo ', post_part))
+	print(post_part)
+} else {
+	system('echo "POST_BSKY=false" >> "$GITHUB_ENV"')
+	system('echo "POST_TEXT= " >> "$GITHUB_ENV"')
 }

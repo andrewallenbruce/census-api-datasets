@@ -7,4 +7,4 @@ commit_changes <- T
 test_changes <- F
 
 # Revert a prior test run (for logging purposes)
-test_revert <- T
+test_revert <- F

@@ -58,7 +58,6 @@ if (test_changes == T) {
 		fake_row <- endpoints_old[add_rows[f],]
 		fake_row$name <- paste0(fake_row$name, "/test")
 		fake_row$title <- paste("TEST", fake_row$title)
-		fake_row$description <- "This is a fake test."
 		fake_row$url <- paste0(fake_row$url, "/fake")
 		endpoints_new <- rbind(fake_row, endpoints_new)
 	}
@@ -192,9 +191,9 @@ if (data_change == "Major") {
 	system('echo "POST_BSKY=true" >> "$GITHUB_ENV"')
 	
 	if (test_changes == T) {
-		post_start <- paste(test_message, "The Census APIs")
+		post_start <- paste(test_message, "The Census Bureau APIs")
 	} else {
-		post_start <- "The Census APIs"
+		post_start <- "The Census Bureau APIs"
 	}
 	
 	if (length(urls_added) == 1) {

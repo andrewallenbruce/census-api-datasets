@@ -4,7 +4,7 @@
 commit_changes <- T
 
 # Test FAKE dataset changes
-test_changes <- F
+test_changes <- T
 
 # Revert a prior test run (for logging purposes)
 test_revert <- F

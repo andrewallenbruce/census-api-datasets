@@ -1,3 +1,4 @@
 "date","test_data","test_revert","change","endpoints_added","urls_added","endpoints_removed","urls_removed"
-"2025-08-11 09:05",FALSE,FALSE,"No data changes",0,"",0,""
+"2025-08-11 09:22",TRUE,FALSE,"Major data update",2,"http://api.census.gov/data/2020/cps/basic/jun/fake, http://api.census.gov/data/1999/cps/basic/oct/fake",4,"http://api.census.gov/data/2022/cps/tobacco/sep, http://api.census.gov/data/2012/ecnrdacq, http://api.census.gov/data/2012/acs/acs1/spp, http://api.census.gov/data/2008/cps/basic/feb"
+"2025-08-11 09:05",FALSE,FALSE,"No data changes",0,,0,
 "2025-08-10 09:30",FALSE,FALSE,"No data changes",0,,0,

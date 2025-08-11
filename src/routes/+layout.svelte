@@ -1,6 +1,6 @@
 <script>
 	//import favicon from '$lib/assets/favicon.svg';
-	import social from '$lib/assets/social-image-og.png';
+	import social from '/assets/social-image-og.png';
 	import '../styles/style.css';
 
 	const social_description = "See when the U.S. Census Bureau adds or removes datasets.";

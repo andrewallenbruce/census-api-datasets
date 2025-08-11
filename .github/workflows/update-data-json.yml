@@ -57,8 +57,8 @@ jobs:
       - name: Build pause
         if: ${{ env.COMMIT_CHANGES == 'true' }} 
         run: |
-          sleep 45
           echo "Pause before building site"
+          sleep 45
 
   # Build the page only if changes were committed
   build_site:
@@ -93,8 +93,8 @@ jobs:
         # Pause a little before posting to give time for page to build
         - name: Bluesky pause
           run: |
-            sleep 60
             echo "Pause before posting to Bluesky"
+            sleep 60
   
         - name: Send post
           uses: myConsciousness/bluesky-post@v5

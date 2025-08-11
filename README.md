@@ -21,3 +21,5 @@ All scraper runs update the update time displayed on the web page. Results are l
 On `major` data changes, endoint changes are saved out to the web page `src/`. On both `major` and `minor` changes the full metadata json is saved to [data/data.json](data/data.json) for posterity.
 
 A [Github action](.github/workflows/update-data-json.yml) runs the scraper, commits changes, and rebuilds the web page. It posts to Bluesky if there are any `major` data changes. 
+
+Disclaimer: This project uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau.

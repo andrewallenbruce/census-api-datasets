@@ -7,7 +7,7 @@
 
 	// data
 	import update_time from './_data/update-time.json';
-	import endpoints from './_data/endpoints.csv';
+	import endpoints from './_data/endpoints.csv'; 
 
 	// components
 	import ChangeTable from './ChangeTable.svelte';

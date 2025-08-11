@@ -130,7 +130,7 @@ if (is_identical) {
 		# Append existing file of endpoint additions/deletions
 		endpoint_changes <- read.csv("src/routes/_data/endpoint-changes.csv")
 		endpoint_changes <- rbind(endpoint_changes, rows_noted)
-		# write.csv(endpoint_changes, "src/routes/_data/endpoint-changes.csv", na = "", row.names = F)
+		write.csv(endpoint_changes, "src/routes/_data/endpoint-changes.csv", na = "", row.names = F)
 		
 		commit_message <- "Major data update"
 		
@@ -141,11 +141,11 @@ if (is_identical) {
 	
 	# Update the minimal csv
 	print("Updating data/endpoints.csv'")
-	# write.csv(endpoints_new, "src/routes/_data/endpoints.csv", row.names = F, na = "")
+	write.csv(endpoints_new, "src/routes/_data/endpoints.csv", row.names = F, na = "")
 	
 	# Download full metadata
 	print("Updating full data/data.json")
-	# download.file("https://api.census.gov/data.json", destfile = "data/data.json")
+	download.file("https://api.census.gov/data.json", destfile = "data/data.json")
 	
 	# Save out the update status to Github actions env
 	system('echo "UPDATED_DATA=true" >> "$GITHUB_ENV"')

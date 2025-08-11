@@ -139,6 +139,14 @@ a.social {
 	vertical-align: top;
 }
 
+.contact-icon, .contact-label {
+	vertical-align: middle;
+}
+.contact-icon {
+	margin-right: 6px;
+	fill: var(--color-highlight);
+}
+
 hr {
 	background: #000000;
 	border: 0;

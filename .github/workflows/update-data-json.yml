@@ -2,7 +2,7 @@ on:
   workflow_dispatch:
   schedule:
     # Run once per day
-    - cron: "30 3,12 * * *"
+    - cron: "30 11,20 * * *"
 
 name: Check for metadata changes
 

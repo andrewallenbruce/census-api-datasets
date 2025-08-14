@@ -54,7 +54,7 @@ string_time <- format(current_time, "%Y-%m-%d %H:%M")
 
 ################################################################
 # Tests for these functions when the data has not ACTUALLY changed
-# Variable test_changes imported from test-data-changes.R
+# Variable data_test imported from test-data-changes.R
 ################################################################
 if (data_test == T) {
 	# system('echo "DATA_TEST=true" >> "$GITHUB_ENV"')
@@ -210,7 +210,7 @@ if (data_change == "Major") {
 	# system('echo "POST_BSKY=true" >> "$GITHUB_ENV"')
 	post_bsky <- T
 	
-	if (test_changes == T) {
+	if (data_test == T) {
 		post_start <- paste(test_message, "The Census Bureau APIs")
 	} else {
 		post_start <- "The Census Bureau APIs"

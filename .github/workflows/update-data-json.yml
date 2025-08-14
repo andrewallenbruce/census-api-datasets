@@ -32,7 +32,8 @@ jobs:
         run: |
           echo "Did endpoints.csv change: ${{env.UPDATED_DATA}}"
           echo "Should changes be committed: ${{env.COMMIT_CHANGES}}"
-          echo "Should it post on bsky: ${{env.POST_BSKY}}"
+          echo "Should it post on bsky (if changes are committed): ${{env.POST_BSKY}}"
+          echo "What should the post text be: ${{env.POST_TEXT}}"
 
       # Commit using message text prepared in R
       - name: Commit changes

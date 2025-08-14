@@ -57,7 +57,6 @@ string_time <- format(current_time, "%Y-%m-%d %H:%M")
 # Variable data_test imported from test-data-changes.R
 ################################################################
 if (data_test == T) {
-	# system('echo "DATA_TEST=true" >> "$GITHUB_ENV"')
 	test_message <- "TEST"
 	
 	# How many rows to add or remove
@@ -83,7 +82,6 @@ if (data_test == T) {
 		endpoints_new <- rbind(fake_row, endpoints_new)
 	}
 } else {
-	# system('echo "DATA_TEST=false" >> "$GITHUB_ENV"')	
 	test_message <- ""
 }
 
@@ -95,8 +93,6 @@ print("Are the old and new endpoints metadata identical?")
 print(updated_data)
 
 if (updated_data == T) {
-	data_change <- "None"
-	# system('echo "UPDATED_DATA=false" >> "$GITHUB_ENV"')
 	commit_message <- "No data changes"
 	urls_added <- NULL
 	urls_removed <- NULL
@@ -115,7 +111,7 @@ if (updated_data == T) {
 	urls_removed <- setdiff(urls_old, urls_new)
 	
 	if (length(urls_added) > 0 | (length(urls_removed) > 0)) {
-		data_change <- "Major"
+		commit_message <- "Major data update"
 		# Extract the full removed or added rows
 		
 		if (length(urls_added) > 0) {
@@ -150,10 +146,7 @@ if (updated_data == T) {
 		endpoint_changes <- rbind(endpoint_changes, rows_noted)
 		write.csv(endpoint_changes, "src/routes/_data/endpoint-changes.csv", na = "", row.names = F)
 		
-		commit_message <- "Major data update"
-		
 	} else {
-		data_change <- "Minor"
 		commit_message <- "Minor data update"
 	}
 	
@@ -164,9 +157,6 @@ if (updated_data == T) {
 	# Download full metadata
 	print("Updating full data/data.json")
 	download.file("https://api.census.gov/data.json", destfile = "data/data.json")
-	
-	# Save out the update status to Github actions env
-	# system('echo "UPDATED_DATA=true" >> "$GITHUB_ENV"')
 }
 
 ################################################################
@@ -196,18 +186,15 @@ write.csv(update_results, "data/update-log.csv", row.names = F, na = "")
 
 # Prepare commit message
 commit_text <- paste(string_time, test_message, commit_message)
-# commit_line <- paste0("COMMIT_MESSAGE='", commit_text, "'", ' >> "$GITHUB_ENV"')
-# system(paste('echo ', commit_line))
 
 ################################################################
-# Social media post
+# Social media post prep
 # Only post if it's a major data update (additions or removals)
 # If it's just one addition or removal, list the URL added/removed
 # Otherwise just how many
 ################################################################
 
-if (data_change == "Major") {
-	# system('echo "POST_BSKY=true" >> "$GITHUB_ENV"')
+if (commit_message == "Major data update") {
 	post_bsky <- T
 	
 	if (data_test == T) {
@@ -250,18 +237,13 @@ if (data_change == "Major") {
 		
 		# Some weird behavior that shouldn't happen
 	} else {
-		system('echo "POST_BSKY=false" >> "$GITHUB_ENV"')
+		post_bsky <- F
 		post_content <- " "
 	} 
-	
-	# post_part <- paste0("POST_TEXT='", post_content, "'", ' >> "$GITHUB_ENV"')
-	# system(paste('echo ', post_part))
-	# print(post_part)
+
 } else {
 	post_bsky <- F
 	post_content <- " "
-	# system('echo "POST_BSKY=false" >> "$GITHUB_ENV"')
-	# system('echo "POST_TEXT= " >> "$GITHUB_ENV"')
 }
 
 ################################################################

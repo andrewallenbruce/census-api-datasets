@@ -139,8 +139,9 @@ a.social {
 	vertical-align: top;
 }
 
-.contact-icon, .contact-label {
+.contact-icon {
 	vertical-align: middle;
+	padding-bottom: 2px;
 }
 .contact-icon {
 	margin-right: 6px;

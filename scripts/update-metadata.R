@@ -8,12 +8,40 @@ library(censusapi)
 
 source("scripts/update-settings.R")
 
-# Should this be committed or not?
-if (commit_changes == F) {
-	system('echo "COMMIT_CHANGES=false" >> "$GITHUB_ENV"')
-} else {
-	system('echo "COMMIT_CHANGES=true" >> "$GITHUB_ENV"')
+################################################################
+# Pass data between R and Github Actions
+################################################################
+send_var <- function(var_name,
+										 var_value,
+										 destination) {
+	send_part <- paste0('"', var_name, "=", var_value, '"', ' >> "$', destination, '"')
+	print(send_part)
+	system(paste('echo', send_part))
 }
+send_env <- function(var_name,
+										 var_value,
+										 send_output = FALSE) {
+	
+	send_var(var_name, var_value, "GITHUB_ENV")
+	
+	# Save to Github output for use in future jobs
+	if (send_output == TRUE) {
+		send_var(var_name, var_value, "GITHUB_OUTPUT")
+	}
+}
+
+################################################################
+# Basic info
+################################################################
+# Should this be committed or not?
+send_env("COMMIT_CHANGES", commit_changes, send_output = TRUE)
+
+
+# if (commit_changes == F) {
+# 	system('echo "COMMIT_CHANGES=false" >> "$GITHUB_ENV"')
+# } else {
+# 	system('echo "COMMIT_CHANGES=true" >> "$GITHUB_ENV"')
+# }
 
 # Read in old metadata
 endpoints_old <- read.csv("src/routes/_data/endpoints.csv")
@@ -171,6 +199,7 @@ update_new <- data.frame(
 	test_data = test_changes,
 	test_revert = test_revert,
 	change = commit_message,
+	endpoints_total = nrow(endpoints_new),
 	endpoints_added = length(urls_added),
 	urls_added = toString(urls_added),
 	endpoints_removed = length(urls_removed),

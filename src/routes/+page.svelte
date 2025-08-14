@@ -351,13 +351,16 @@
 		text-transform: uppercase;
 		font-family: var(--font-mono);
 	}
+
 	#about {
 		padding: 40px;
 		border: 1px solid var(--color-highlight);
 	}
+
 	#about > p {
 		font-size: var(--text-small);
 	}
+	
 	.code {
 		font-family: var(--font-mono);
 		background-color: #efefef;

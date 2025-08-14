@@ -28,8 +28,7 @@ jobs:
         run: |
           Rscript scripts/update-metadata.R
 
-      - name: Pass vars to output for use in following jobs
-        id: passvars
+      - name: List key vars
         run: |
           echo "Did endpoints.csv change: ${{env.UPDATED_DATA}}"
           echo "Should changes be committed: ${{env.COMMIT_CHANGES}}"

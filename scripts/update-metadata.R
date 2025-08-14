@@ -9,7 +9,10 @@ library(censusapi)
 source("scripts/update-settings.R")
 
 ################################################################
-# Pass data between R and Github Actions
+# Function to pass variables between R and Github Actions
+# GITHUB_ENV is used within a job
+# Also need to send to GITHUB_OUTPUT if using the var in 
+# future jobs - building the site and posting to Bluesky
 ################################################################
 send_var <- function(var_name,
 										 var_value,
@@ -33,16 +36,6 @@ send_env <- function(var_name,
 ################################################################
 # Basic info
 ################################################################
-# Should this be committed or not?
-send_env("COMMIT_CHANGES", commit_changes, send_output = TRUE)
-
-
-# if (commit_changes == F) {
-# 	system('echo "COMMIT_CHANGES=false" >> "$GITHUB_ENV"')
-# } else {
-# 	system('echo "COMMIT_CHANGES=true" >> "$GITHUB_ENV"')
-# }
-
 # Read in old metadata
 endpoints_old <- read.csv("src/routes/_data/endpoints.csv")
 endpoints_old[endpoints_old == ""] <- NA 
@@ -59,12 +52,15 @@ current_time <- as.POSIXct(Sys.time(),
 													 tz = "America/New_York")
 string_time <- format(current_time, "%Y-%m-%d %H:%M")
 
+# Should this be committed or not?
+
+
 ################################################################
 # Tests for these functions when the data has not ACTUALLY changed
 # Variable test_changes imported from test-data-changes.R
 ################################################################
-if (test_changes == T) {
-	system('echo "DATA_TEST=true" >> "$GITHUB_ENV"')
+if (data_test == T) {
+	# system('echo "DATA_TEST=true" >> "$GITHUB_ENV"')
 	test_message <- "TEST"
 	
 	# How many rows to add or remove
@@ -90,22 +86,21 @@ if (test_changes == T) {
 		endpoints_new <- rbind(fake_row, endpoints_new)
 	}
 } else {
-	system('echo "DATA_TEST=false" >> "$GITHUB_ENV"')	
+	# system('echo "DATA_TEST=false" >> "$GITHUB_ENV"')	
 	test_message <- ""
 }
 
 ################################################################
 # Is there any difference between old and new data?
 ################################################################
-is_identical <- identical(endpoints_old, endpoints_new)
+updated_data <- identical(endpoints_old, endpoints_new)
 print("Are the old and new endpoints metadata identical?")
-print(is_identical)
+print(updated_data)
 
-if (is_identical) {
-	data_change <- "None"
-	
+if (updated_data) {
 	print("No data changes")
-	system('echo "UPDATED_DATA=false" >> "$GITHUB_ENV"')
+	data_change <- "None"
+	# system('echo "UPDATED_DATA=false" >> "$GITHUB_ENV"')
 	commit_message <- "No data changes"
 	urls_added <- NULL
 	urls_removed <- NULL
@@ -175,7 +170,7 @@ if (is_identical) {
 	download.file("https://api.census.gov/data.json", destfile = "data/data.json")
 	
 	# Save out the update status to Github actions env
-	system('echo "UPDATED_DATA=true" >> "$GITHUB_ENV"')
+	# system('echo "UPDATED_DATA=true" >> "$GITHUB_ENV"')
 }
 
 ################################################################
@@ -186,17 +181,11 @@ if (is_identical) {
 update_json <- paste0('{"updated": "', current_time, '"}')
 writeLines(update_json, "src/routes/_data/update-time.json")
 
-# Prepare commit message, run through Github actions
-commit_text <- paste(string_time, test_message, commit_message)
-commit_line <- paste0("COMMIT_MESSAGE='", commit_text, "'", ' >> "$GITHUB_ENV"')
-system(paste('echo ', commit_line))
-print(commit_line)
-
 # Save log of update results
 update_results <- read.csv("data/update-log.csv")
 update_new <- data.frame(
 	date = string_time,
-	test_data = test_changes,
+	test_data = data_test,
 	test_revert = test_revert,
 	change = commit_message,
 	endpoints_total = nrow(endpoints_new),
@@ -209,6 +198,11 @@ update_new <- data.frame(
 update_results <- rbind(update_new, update_results)
 write.csv(update_results, "data/update-log.csv", row.names = F, na = "")
 
+# Prepare commit message
+commit_text <- paste(string_time, test_message, commit_message)
+# commit_line <- paste0("COMMIT_MESSAGE='", commit_text, "'", ' >> "$GITHUB_ENV"')
+# system(paste('echo ', commit_line))
+
 ################################################################
 # Social media post
 # Only post if it's a major data update (additions or removals)
@@ -217,7 +211,8 @@ write.csv(update_results, "data/update-log.csv", row.names = F, na = "")
 ################################################################
 
 if (data_change == "Major") {
-	system('echo "POST_BSKY=true" >> "$GITHUB_ENV"')
+	# system('echo "POST_BSKY=true" >> "$GITHUB_ENV"')
+	post_bsky <- T
 	
 	if (test_changes == T) {
 		post_start <- paste(test_message, "The Census Bureau APIs")
@@ -263,10 +258,23 @@ if (data_change == "Major") {
 		post_content <- " "
 	} 
 	
-	post_part <- paste0("POST_TEXT='", post_content, "'", ' >> "$GITHUB_ENV"')
-	system(paste('echo ', post_part))
-	print(post_part)
+	# post_part <- paste0("POST_TEXT='", post_content, "'", ' >> "$GITHUB_ENV"')
+	# system(paste('echo ', post_part))
+	# print(post_part)
 } else {
-	system('echo "POST_BSKY=false" >> "$GITHUB_ENV"')
-	system('echo "POST_TEXT= " >> "$GITHUB_ENV"')
+	post_bsky <- F
+	post_content <= " "
+	# system('echo "POST_BSKY=false" >> "$GITHUB_ENV"')
+	# system('echo "POST_TEXT= " >> "$GITHUB_ENV"')
 }
+
+################################################################
+# Send vars to Github actions env
+################################################################
+
+send_env("COMMIT_CHANGES", commit_changes, send_output = TRUE)
+send_env("COMMIT_MESSAGE", commit_text)
+send_env("DATA_TEST", data_test)
+send_env("UPDATED_DATA", updated_data)
+send_env("POST_BSKY", post_bsky, send_output = TRUE)
+send_env("POST_TEXT", post_content, send_output = TRUE)

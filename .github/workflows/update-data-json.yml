@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       COMMIT_CHANGES: ${{ steps.rscript.outputs.COMMIT_CHANGES}}
-      POST_BSKY: ${{ steps.passvars.outputs.POST_BSKY}}
-      POST_TEXT: ${{ steps.passvars.outputs.POST_TEXT}}
+      POST_BSKY: ${{ steps.rscript.outputs.POST_BSKY}}
+      POST_TEXT: ${{ steps.rscript.outputs.POST_TEXT}}
     steps:
       - uses: actions/checkout@v4
     
@@ -31,11 +31,9 @@ jobs:
       - name: Pass vars to output for use in following jobs
         id: passvars
         run: |
-          echo "endpoints.csv changed: ${{env.UPDATED_DATA}}"
+          echo "Did endpoints.csv change: ${{env.UPDATED_DATA}}"
           echo "Should changes be committed: ${{env.COMMIT_CHANGES}}"
           echo "Should it post on bsky: ${{env.POST_BSKY}}"
-          echo "POST_BSKY=${{env.POST_BSKY}}" >> $GITHUB_OUTPUT
-          echo "POST_TEXT=${{env.POST_TEXT}}" >> $GITHUB_OUTPUT
 
       # Commit using message text prepared in R
       - name: Commit changes

@@ -90,7 +90,7 @@ if (data_test == T) {
 ################################################################
 is_identical <- identical(endpoints_old, endpoints_new)
 print("Are the old and new endpoints metadata identical?")
-print(updated_data)
+print(is_identical)
 
 if (is_identical == T) {
 	updated_data <- F

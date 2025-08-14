@@ -52,9 +52,6 @@ current_time <- as.POSIXct(Sys.time(),
 													 tz = "America/New_York")
 string_time <- format(current_time, "%Y-%m-%d %H:%M")
 
-# Should this be committed or not?
-
-
 ################################################################
 # Tests for these functions when the data has not ACTUALLY changed
 # Variable test_changes imported from test-data-changes.R
@@ -97,8 +94,7 @@ updated_data <- identical(endpoints_old, endpoints_new)
 print("Are the old and new endpoints metadata identical?")
 print(updated_data)
 
-if (updated_data) {
-	print("No data changes")
+if (updated_data == T) {
 	data_change <- "None"
 	# system('echo "UPDATED_DATA=false" >> "$GITHUB_ENV"')
 	commit_message <- "No data changes"
@@ -263,7 +259,7 @@ if (data_change == "Major") {
 	# print(post_part)
 } else {
 	post_bsky <- F
-	post_content <= " "
+	post_content <- " "
 	# system('echo "POST_BSKY=false" >> "$GITHUB_ENV"')
 	# system('echo "POST_TEXT= " >> "$GITHUB_ENV"')
 }

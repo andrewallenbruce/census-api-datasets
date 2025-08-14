@@ -88,16 +88,18 @@ if (data_test == T) {
 ################################################################
 # Is there any difference between old and new data?
 ################################################################
-updated_data <- identical(endpoints_old, endpoints_new)
+is_identical <- identical(endpoints_old, endpoints_new)
 print("Are the old and new endpoints metadata identical?")
 print(updated_data)
 
-if (updated_data == T) {
+if (is_identical == T) {
+	updated_data <- F
 	commit_message <- "No data changes"
 	urls_added <- NULL
 	urls_removed <- NULL
 	
 } else {
+	updated_data <- T
 	# If there is a difference, see if there are added and/or removed endpoints
 	
 	# If the endpoint row changed in some other way like updated

@@ -70,11 +70,6 @@ jobs:
     needs: build_site
     if: ${{ needs.check_data.outputs.POST_BSKY == 'true' && needs.check_data.outputs.COMMIT_CHANGES == 'true' }} 
     steps:
-        - name: Echo vars
-          run: |
-            echo "Should it post: ${{ needs.check_data.outputs.POST_BSKY }}"
-            echo "Post text: ${{ needs.check_data.outputs.POST_TEXT }}"
-
         - name: Set up end of post text
           run: |
             echo

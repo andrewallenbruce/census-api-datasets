@@ -1,7 +1,7 @@
 # Settings for the metadata comparison run
 
 # Should changes be committed to Github?
-commit_changes <- F
+commit_changes <- T
 
 # Test FAKE dataset changes
 data_test <- F

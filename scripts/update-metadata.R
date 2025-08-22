@@ -54,7 +54,7 @@ string_time <- format(current_time, "%Y-%m-%d %H:%M")
 
 ################################################################
 # Tests for these functions when the data has not ACTUALLY changed
-# Variable data_test imported from test-data-changes.R
+# Variable data_test imported from update-settings.R
 ################################################################
 if (data_test == T) {
 	test_message <- "TEST"

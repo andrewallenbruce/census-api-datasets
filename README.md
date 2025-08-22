@@ -22,4 +22,7 @@ On `major` data changes, endoint changes are saved out to the web page `src/`. O
 
 A [Github action](.github/workflows/update-data-json.yml) runs the scraper, commits changes, and rebuilds the web page. It posts to Bluesky if there are any `major` data changes. 
 
+## Tools
 Disclaimer: This project uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau.
+
+The web page is built using [Svelte](https://svelte.dev/) and SvelteKit. The vertical bar chart uses [Layer Cake](https://layercake.graphics/). The robots.txt file is from [ai-robots-txt](https://github.com/ai-robots-txt/ai.robots.txt). The Bluesky icon is from [icons8](https://icons8.com/).

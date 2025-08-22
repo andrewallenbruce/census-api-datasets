@@ -36,6 +36,7 @@ jobs:
           echo "What should the post text be: ${{env.POST_TEXT}}"
 
       # Commit using message text prepared in R
+      # If anyone is adapting this code make sure to change the user.name and user.email to your own!
       - name: Commit changes
         if: ${{ env.COMMIT_CHANGES == 'true' }} 
         run: |

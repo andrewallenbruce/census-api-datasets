@@ -68,7 +68,7 @@ jobs:
   # Post to Bluesky based on R output, after site built
   post_bluesky:
     runs-on: ubuntu-latest
-    needs: build_site
+    needs: check_data
     if: ${{ needs.check_data.outputs.POST_BSKY == 'true'}} 
     steps:
         - name: Set up end of post text
@@ -90,11 +90,11 @@ jobs:
             echo "Post text: ${{needs.check_data.outputs.POST_TEXT}}"
             sleep 30
   
-        - name: Send post
-          uses: myConsciousness/bluesky-post@v5
-          with:
-              text: ${{ needs.check_data.outputs.POST_TEXT }}${{ env.POST_END }}
-              link-preview-url: "https://www.hrecht.com/census-api-datasets/"
-              identifier: ${{ secrets.BLUESKY_IDENTIFIER }}
-              password: ${{ secrets.BLUESKY_PASSWORD }}
+        # - name: Send post
+        #   uses: myConsciousness/bluesky-post@v5
+        #   with:
+        #       text: ${{ needs.check_data.outputs.POST_TEXT }}${{ env.POST_END }}
+        #       link-preview-url: "https://www.hrecht.com/census-api-datasets/"
+        #       identifier: ${{ secrets.BLUESKY_IDENTIFIER }}
+        #       password: ${{ secrets.BLUESKY_PASSWORD }}
 

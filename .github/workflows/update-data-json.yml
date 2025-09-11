@@ -69,7 +69,7 @@ jobs:
   post_bluesky:
     runs-on: ubuntu-latest
     needs: [check_data, build_site]
-    if: ${{ needs.check_data.outputs.POST_BSKY == 'true' }} 
+    if: ${{ needs.check_data.outputs.POST_BSKY == 'true' && needs.check_data.outputs.COMMIT_CHANGES == 'true' }} 
     steps:
         - name: Set up end of post text
           run: |
@@ -90,11 +90,11 @@ jobs:
             echo "Post text: ${{needs.check_data.outputs.POST_TEXT}}"
             sleep 30
   
-        # - name: Send post
-        #   uses: myConsciousness/bluesky-post@v5
-        #   with:
-        #       text: ${{ needs.check_data.outputs.POST_TEXT }} ${{ env.POST_END }}
-        #       link-preview-url: "https://www.hrecht.com/census-api-datasets/"
-        #       identifier: ${{ secrets.BLUESKY_IDENTIFIER }}
-        #       password: ${{ secrets.BLUESKY_PASSWORD }}
+        - name: Send post
+          uses: myConsciousness/bluesky-post@v5
+          with:
+              text: ${{ needs.check_data.outputs.POST_TEXT }} ${{ env.POST_END }}
+              link-preview-url: "https://www.hrecht.com/census-api-datasets/"
+              identifier: ${{ secrets.BLUESKY_IDENTIFIER }}
+              password: ${{ secrets.BLUESKY_PASSWORD }}
 

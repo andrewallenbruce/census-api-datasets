@@ -223,7 +223,7 @@ if (commit_message == "Major data update") {
 		
 		# More than one addition
 	} else if (length(urls_added) > 1 & length(urls_removed) == 0) {
-		post_content <- paste(post_start, added_text)
+		post_content <- paste(post_start, added_text, ".")
 		
 		# Just one removal
 	}	else if (length(urls_added) == 0 & length(urls_removed) == 1) {
@@ -231,11 +231,11 @@ if (commit_message == "Major data update") {
 		
 		# More than one removal
 	} else if (length(urls_added) == 0 & length(urls_removed) > 1) {
-		post_content <- paste(post_start, removed_text)
+		post_content <- paste(post_start, removed_text, ".")
 		
 		# Both addition(s) and removal(s)
 	} else if (length(urls_added) > 0 & length(urls_removed) > 0){
-		post_content <- paste(post_start, added_text, "and", removed_text)
+		post_content <- paste(post_start, added_text, "and", removed_text, ".")
 		
 		# Some weird behavior that shouldn't happen
 	} else {

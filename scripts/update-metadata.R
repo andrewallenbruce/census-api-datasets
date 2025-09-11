@@ -68,9 +68,9 @@ if (data_test == T) {
 	
 	# Fake remove rows
 	rm_rows <- sample(1:nrow(endpoints_new), rm_num, replace=FALSE)
-	for (f in seq_along(rm_rows)) {
-		endpoints_new <- endpoints_new[-rm_rows[f],]
-	}
+	# for (f in seq_along(rm_rows)) {
+	# 	endpoints_new <- endpoints_new[-rm_rows[f],]
+	# }
 	
 	# Fake new rows
 	add_rows <- sample(1:nrow(endpoints_new), add_num, replace=FALSE)
